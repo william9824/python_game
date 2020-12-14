@@ -42,6 +42,14 @@ class Ship:
         # pygame.draw.rect(window,(255,0,0),(self.x, self.y, 50, 50))
         window.blit(self.ship_img, (self.x, self.y))
 
+    def get_height(self):
+        return self.ship_img.get_height()
+
+    def get_width(self):
+        return self.ship_img.get_width()
+
+
+
 # Player Ship
 class Player(Ship):
     def __init__(self,x,y,health=100):
@@ -50,6 +58,8 @@ class Player(Ship):
         self.laser_img = YELLOW_LASER
         self.mask = pygame.mask.from_surface(self.ship_img) # hit box 
         self.max_health = health
+
+
 
 # Control flow - main function
 def main():
@@ -61,7 +71,7 @@ def main():
 
     player_vel = 5 # Velocity
 
-    ship = Player(300,650)
+    player = Player(300,650)
 
     clock = pygame.time.Clock()
 
@@ -75,7 +85,7 @@ def main():
         WIN.blit(lifes_label,(10,10)) # POS( x+10, y+10 ) : Top-left
         WIN.blit(level_label,(WIDTH - level_label.get_width() - 10, 10)) # POS( TOP_RIGHT - 10 , 10 ) : Top-right
 
-        ship.draw(WIN)
+        player.draw(WIN)
 
         pygame.display.update()
 
@@ -91,14 +101,14 @@ def main():
 
         # Player Movement control && Stay in the grid(Window) :  * Coordinate system starts from LEFT-TOP corner *
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and ship.x - player_vel > 0 : # Go left
-            ship.x -= player_vel
-        if keys[pygame.K_d] and ship.x + player_vel + 80 < WIDTH : # Go right
-            ship.x += player_vel
-        if keys[pygame.K_w] and ship.y - player_vel > 0 : # Go up
-            ship.y -= player_vel
-        if keys[pygame.K_s] and ship.y + player_vel + 80 < HEIGHT : # Go down
-            ship.y += player_vel
+        if keys[pygame.K_a] and player.x - player_vel > 0 : # Go left
+            player.x -= player_vel
+        if keys[pygame.K_d] and player.x + player_vel + player.get_width() < WIDTH : # Go right
+            player.x += player_vel
+        if keys[pygame.K_w] and player.y - player_vel > 0 : # Go up
+            player.y -= player_vel
+        if keys[pygame.K_s] and player.y + player_vel + player.get_height() < HEIGHT : # Go down
+            player.y += player_vel
 
 
 
