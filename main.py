@@ -45,10 +45,10 @@ class Ship:
 # Player Ship
 class Player(Ship):
     def __init__(self,x,y,health=100):
-        super().__init__(x, y, health)
+        super().__init__(x, y, health) # Super
         self.ship_img = YELLOW_SPACE_SHIP
         self.laser_img = YELLOW_LASER
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.mask = pygame.mask.from_surface(self.ship_img) # hit box 
         self.max_health = health
 
 # Control flow - main function
@@ -59,7 +59,7 @@ def main():
     FPS = 60 # FPS, Game Speed
     main_font = pygame.font.SysFont("comicsans",60)
 
-    player_vel = 5
+    player_vel = 5 # Velocity
 
     ship = Player(300,650)
 
@@ -87,14 +87,19 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False # Quit Game by pressing "X"
+                run = False # Quit Game while pressing "X"
 
-        # Movement control
+        # Player Movement control && Stay in the grid(Window) :  * Coordinate system starts from LEFT-TOP corner *
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a]: # Go left
+        if keys[pygame.K_a] and ship.x - player_vel > 0 : # Go left
             ship.x -= player_vel
-        if keys[pygame.K_d]: # Go right
+        if keys[pygame.K_d] and ship.x + player_vel + 80 < WIDTH : # Go right
             ship.x += player_vel
+        if keys[pygame.K_w] and ship.y - player_vel > 0 : # Go up
+            ship.y -= player_vel
+        if keys[pygame.K_s] and ship.y + player_vel + 80 < HEIGHT : # Go down
+            ship.y += player_vel
+
 
 
 main()
