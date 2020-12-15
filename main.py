@@ -29,18 +29,39 @@ BKG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "backgroun
 
 # Blueprint of ship; attribute (POS, HP, IMG, LASER , CD)
 class Ship:
+    COOLDOWN = 15
+
     def __init__(self, x, y,health=100):
         self.x = x
         self.y = y
         self.health = health
         self.ship_img = None
         self.laser_img = None
-        self.laser = []
+        self.lasers = []
         self.cool_down_counter = 0
 
     def draw(self,window):
         # pygame.draw.rect(window,(255,0,0),(self.x, self.y, 50, 50))  * RED BOX FOR TEST *
         window.blit(self.ship_img, (self.x, self.y))
+        for laser in self.lasers:
+            laser.draw(window)
+
+    def move_laser(self, vel, objs):
+        self.cooldown()
+        for laser in self.lasers:
+            # Write sth here #
+
+    def cooldown(self):
+        if self.cool_down_counter >= self.COOLDOWN:
+            self.cool_down_counter = 0
+        elif self.cool_down_counter > 0:
+            self.cool_down_counter += 1
+
+    def shoot(self):
+        if self.cool_down_counter == 0:
+            laser = Laser(x, y, self.laser_img)
+            self.laser.append(laser) # add to list
+            self.cool_down_counter = 1
 
     def get_height(self): # Get ship grid  * edge position *
         return self.ship_img.get_height()
@@ -48,8 +69,28 @@ class Ship:
     def get_width(self): # Get ship grid * edge position *
         return self.ship_img.get_width()
 
+
+class Laser:
+    def __init__(self, x, y, img):
+        self.x = x
+        self.y = y
+        self.img = img
+        self.mask = pygame.mask.from_surface(self.img)
+
+    def draw(self, window): # Update frame
+        window.blit(self.img, (self.x, self.y))
+
+    def move(self, vel): # Go down side
+        self.y += vel
+
+    def off_screen(self, height):
+        return self.y < height and self.y >= 0
+
+    def collision(self, obj):
+        return collide(obj, self)
+
 class Enemy(Ship):
-    COLOR_MAPPING = {
+    COLOR_MAPPING = { # Create a mapping list
         "RED": (RED_SHIP, RED_LASER),
         "GREEN": (GREEN_SHIP, GREEN_LASER),
         "BLUE" : (BLUE_SHIP, BLUE_LASER),
@@ -57,11 +98,11 @@ class Enemy(Ship):
 
     def __init__(self,x,y,color, health = 100):
         super().__init__(x, y, health)
-        self.ship_img, self.laser_img = self.COLOR_MAPPING[color]
+        self.ship_img, self.laser_img = self.COLOR_MAPPING[color] # Match the mapping list | e.g. * COLOR_MAPPING[RED] *
         self.mask = pygame.mask.from_surface(self.ship_img)
 
     def move(self, vel):
-        self.y += vel
+        self.y += vel # Go down
 
 
 # Player Ship
@@ -74,6 +115,10 @@ class Player(Ship):
         self.max_health = health
 
 
+def collide(obj1, obj2): # Overlap for offset: obj1's coordinate - obj2's coordinate
+    offset_x = obj1.x - obj2.x
+    offset_y = obj1.y - obj2.y
+    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None # if not overlaping -> None | if overlapping -> (x,y)
 
 # Control flow - main function
 def main():
@@ -112,7 +157,7 @@ def main():
             enemy.draw(WIN)
 
         if lost:
-            lost_label = lost_font.render("Lost",1, (255,255,255))
+            lost_label = lost_font.render("Lost", 1, (255,255,255))
             WIN.blit(lost_label, (WIDTH/2 - lost_label.get_width()/2 , HEIGHT/2)) # Put it Center : Window Center - Label's Center
 
         player.draw(WIN)
@@ -133,14 +178,14 @@ def main():
            if lost_count > FPS * 5: # Frame Per Second: 1Sec = 60 Frame | FPS * n = nSec : Timer
                run = False
            else:
-                continue
+                continue # Go back to beginning of while loop -> "while run"
 
         if len(enemies) == 0:
             level += 1
             wave_length += 5
             for i in range(wave_length): # Spawn Randomly instead of coming down at the same time
                 enemy = Enemy(random.randrange(80, WIDTH-100), random.randrange(-1500, - 100), random.choice(["RED", "GREEN", "BLUE"]) ) # x,y { 80 ~ WIDTH (WIDTH -100), (-1200 ~ -120 ) }
-                enemies.append(enemy)
+                enemies.append(enemy) # add to list
 
 
         for event in pygame.event.get():
@@ -157,6 +202,8 @@ def main():
             player.y -= player_vel
         if keys[pygame.K_s] and player.y + player_vel + player.get_height() < HEIGHT : # Go down
             player.y += player_vel
+        if keys[pygame.K_s]:
+            player.shoot()
 
         for enemy in enemies[:]: # Copy Enemy list, So it doesnt affect "list: enemies" -- Not necessary but safer --
             enemy.move(enemy_vel)
