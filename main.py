@@ -92,7 +92,7 @@ class Laser:
         self.y += vel
 
     def off_screen(self, height):
-        return not(self.y < height and self.y >= 0)
+        return not(self.y >= 0 and self.y <= height)
 
     def collision(self, obj):
         return collide(self, obj)
@@ -136,8 +136,8 @@ class Player(Ship):
 
 
 def collide(obj1, obj2): # Overlap for offset: obj1's coordinate - obj2's coordinate
-    offset_x = obj1.x - obj2.x
-    offset_y = obj1.y - obj2.y
+    offset_x = obj2.x - obj1.x
+    offset_y = obj2.y - obj1.y
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None # if not overlaping -> None | if overlapping -> (x,y)
 
 # Control flow - main function
@@ -157,7 +157,7 @@ def main():
     wave_length = 5
 
     enemy_vel = 1 # Velocity
-    laser_vel = 2 # Velocity
+    laser_vel = 5 # Velocity
     player_vel = 5 # Velocity
 
     player = Player(300,650)
