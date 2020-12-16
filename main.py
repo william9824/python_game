@@ -46,13 +46,12 @@ class Ship:
         # pygame.draw.rect(window,(255,0,0),(self.x, self.y, 50, 50))  * RED BOX FOR TEST *
         window.blit(self.ship_img, (self.x, self.y))
         for laser in self.lasers:
-            laser.draw(window)
-
+            laser.draw(window) # draw laser
 
     def move_lasers(self, vel, obj):
-        self.cooldown()
+        self.cooldown() # Set cooldown
         for laser in self.lasers:
-            laser.move(vel)
+            laser.move(vel) # move laser
             if laser.off_screen(HEIGHT):
                 self.lasers.remove(laser)
             elif laser.collision(obj):
@@ -70,8 +69,6 @@ class Ship:
             self.cool_down_counter = 0
         elif self.cool_down_counter > 0:
             self.cool_down_counter += 1
-
-
 
     def get_height(self): # Get ship grid  * edge position *
         return self.ship_img.get_height()
@@ -95,10 +92,10 @@ class Laser:
         self.y += vel
 
     def off_screen(self, height):
-        return self.y < height and self.y >= 0
+        return not(self.y < height and self.y >= 0)
 
     def collision(self, obj):
-        return collide(obj, self)
+        return collide(self, obj)
 
 class Enemy(Ship):
     COLOR_MAPPING = { # Create a mapping list
@@ -125,7 +122,7 @@ class Player(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img) # hit box 
         self.max_health = health
 
-    def move_lasers(self, vel, objs):
+    def move_lasers(self, vel, objs): # if the laser collide any enemy or not
         self.cooldown()
         for laser in self.lasers:
             laser.move(vel)
@@ -134,7 +131,7 @@ class Player(Ship):
             else:
                 for obj in objs:
                     if laser.collision(obj):
-                        obj.remove(obj)
+                        objs.remove(obj)
                         self.lasers.remove(laser)
 
 
@@ -226,16 +223,17 @@ def main():
             player.y -= player_vel
         if keys[pygame.K_s] and player.y + player_vel + player.get_height() < HEIGHT : # Go down
             player.y += player_vel
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE]: # shoot laser
             player.shoot()
 
         for enemy in enemies[:]: # Copy Enemy list, So it doesnt affect "list: enemies" -- Not necessary but safer --
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
+
             if enemy.y + enemy.get_height() > HEIGHT: # Enemies go outside the window
                 lives -= 1
                 enemies.remove(enemy) # Destroy object
 
-        player.move_lasers(laser_vel, enemies)
+        player.move_lasers(-laser_vel, enemies)
 
 main()
