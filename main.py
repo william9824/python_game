@@ -48,27 +48,29 @@ class Ship:
         for laser in self.lasers:
             laser.draw(window)
 
-    def cooldown(self):
-        if self.cool_down_counter >= self.COOLDOWN:
-            self.cool_down_counter = 0
-        elif self.cool_down_counter > 0:
-            self.cool_down_counter += 1
 
-    def shoot(self):
-        if self.cool_down_counter == 0:
-            laser = Laser(x, y, self.laser_img)
-            self.laser.append(laser) # add to list
-            self.cool_down_counter = 1
-
-    def move_laser(self, vel, obj):
+    def move_lasers(self, vel, obj):
         self.cooldown()
         for laser in self.lasers:
             laser.move(vel)
             if laser.off_screen(HEIGHT):
                 self.lasers.remove(laser)
             elif laser.collision(obj):
-                obj.health -= 20 # Laser damage
+                obj.health -= 20 # laser damage
                 self.lasers.remove(laser)
+
+    def shoot(self):
+        if self.cool_down_counter == 0:
+            laser = Laser(self.x, self.y, self.laser_img)
+            self.lasers.append(laser)
+            self.cool_down_counter = 1
+
+    def cooldown(self):
+        if self.cool_down_counter >= self.COOLDOWN:
+            self.cool_down_counter = 0
+        elif self.cool_down_counter > 0:
+            self.cool_down_counter += 1
+
 
 
     def get_height(self): # Get ship grid  * edge position *
@@ -123,6 +125,18 @@ class Player(Ship):
         self.mask = pygame.mask.from_surface(self.ship_img) # hit box 
         self.max_health = health
 
+    def move_lasers(self, vel, objs):
+        self.cooldown()
+        for laser in self.lasers:
+            laser.move(vel)
+            if laser.off_screen(HEIGHT):
+                self.lasers.remove(laser)
+            else:
+                for obj in objs:
+                    if laser.collision(obj):
+                        obj.remove(obj)
+                        self.lasers.remove(laser)
+
 
 def collide(obj1, obj2): # Overlap for offset: obj1's coordinate - obj2's coordinate
     offset_x = obj1.x - obj2.x
@@ -144,8 +158,9 @@ def main():
 
     enemies = []
     wave_length = 5
-    enemy_vel = 1
 
+    enemy_vel = 1 # Velocity
+    laser_vel = 2 # Velocity
     player_vel = 5 # Velocity
 
     player = Player(300,650)
@@ -211,14 +226,16 @@ def main():
             player.y -= player_vel
         if keys[pygame.K_s] and player.y + player_vel + player.get_height() < HEIGHT : # Go down
             player.y += player_vel
-        if keys[pygame.K_s]:
+        if keys[pygame.K_SPACE]:
             player.shoot()
 
         for enemy in enemies[:]: # Copy Enemy list, So it doesnt affect "list: enemies" -- Not necessary but safer --
             enemy.move(enemy_vel)
+            enemy.move_lasers(laser_vel, player)
             if enemy.y + enemy.get_height() > HEIGHT: # Enemies go outside the window
                 lives -= 1
                 enemies.remove(enemy) # Destroy object
 
+        player.move_lasers(laser_vel, enemies)
 
 main()
