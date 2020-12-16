@@ -7,24 +7,26 @@ import time
 # Window setting
 WIDTH, HEIGHT = 750, 750
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Space Shooter")
-
-# Load image
-RED_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_red_small.png"))
-GREEN_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_green_small.png"))
-BLUE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_blue_small.png"))
-
-# Player ship
-YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_yellow.png"))
-
-# Load laser
-RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
-GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
-BLUE_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_blue.png"))
-YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"))
+pygame.display.set_caption("Space Invader")
 
 # Background & Scaling (OS_PATH , SCALE DIMENSION)
-BKG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")),(WIDTH,HEIGHT))
+BKG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background.png")),(WIDTH,HEIGHT))
+
+
+# Load laser
+YELLOW_LASER = pygame.image.load(os.path.join("assets", "laser_yellow.png"))
+RED_LASER = pygame.image.load(os.path.join("assets", "laser_red.png"))
+GREEN_LASER = pygame.image.load(os.path.join("assets", "laser_green.png"))
+BLUE_LASER = pygame.image.load(os.path.join("assets", "laser_blue.png"))
+
+# Load ship
+RED_SHIP = pygame.image.load(os.path.join("assets", "ship_red.png"))
+BLUE_SHIP = pygame.image.load(os.path.join("assets", "ship_blue.png"))
+GREEN_SHIP = pygame.image.load(os.path.join("assets", "ship_green.png"))
+
+# Player ship
+YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("assets", "ship_yellow.png"))
+
 
 
 # Blueprint of ship; attribute (POS, HP, IMG, LASER , CD)
@@ -46,11 +48,6 @@ class Ship:
         for laser in self.lasers:
             laser.draw(window)
 
-    def move_laser(self, vel, objs):
-        self.cooldown()
-        for laser in self.lasers:
-            # Write sth here #
-
     def cooldown(self):
         if self.cool_down_counter >= self.COOLDOWN:
             self.cool_down_counter = 0
@@ -62,6 +59,17 @@ class Ship:
             laser = Laser(x, y, self.laser_img)
             self.laser.append(laser) # add to list
             self.cool_down_counter = 1
+
+    def move_laser(self, vel, obj):
+        self.cooldown()
+        for laser in self.lasers:
+            laser.move(vel)
+            if laser.off_screen(HEIGHT):
+                self.lasers.remove(laser)
+            elif laser.collision(obj):
+                obj.health -= 20 # Laser damage
+                self.lasers.remove(laser)
+
 
     def get_height(self): # Get ship grid  * edge position *
         return self.ship_img.get_height()
@@ -79,6 +87,7 @@ class Laser:
 
     def draw(self, window): # Update frame
         window.blit(self.img, (self.x, self.y))
+
 
     def move(self, vel): # Go down side
         self.y += vel
