@@ -112,6 +112,11 @@ class Enemy(Ship):
     def move(self, vel):
         self.y += vel # Go down
 
+    def shoot(self):
+        if self.cool_down_counter == 0:
+            laser = Laser(self.x-15, self.y, self.laser_img)
+            self.lasers.append(laser)
+            self.cool_down_counter = 1
 
 # Player Ship
 class Player(Ship):
@@ -121,6 +126,10 @@ class Player(Ship):
         self.laser_img = YELLOW_LASER
         self.mask = pygame.mask.from_surface(self.ship_img) # hit box 
         self.max_health = health
+
+    def draw(self,window):
+        super().draw(window)
+        self.hp_bar(window)
 
     def move_lasers(self, vel, objs): # if the laser collide any enemy or not
         self.cooldown()
@@ -133,6 +142,10 @@ class Player(Ship):
                     if laser.collision(obj):
                         objs.remove(obj)
                         self.lasers.remove(laser)
+
+    def hp_bar(self, window): # How many present does hp lose
+        pygame.draw.rect(window, (180, 0, 0),(self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width(), 10))
+        pygame.draw.rect(window, (0, 255, 0), (self.x, self.y + self.ship_img.get_height() + 10, self.ship_img.get_width() * (self.health / self.max_health), 10))
 
 
 def collide(obj1, obj2): # Overlap for offset: obj1's coordinate - obj2's coordinate
@@ -156,11 +169,11 @@ def main():
     enemies = []
     wave_length = 5
 
-    enemy_vel = 1 # Velocity
+    enemy_vel = 2 # Velocity
     laser_vel = 5 # Velocity
     player_vel = 5 # Velocity
 
-    player = Player(300,650)
+    player = Player(300,630)
 
     clock = pygame.time.Clock()
 
@@ -221,7 +234,7 @@ def main():
             player.x += player_vel
         if keys[pygame.K_w] and player.y - player_vel > 0 : # Go up
             player.y -= player_vel
-        if keys[pygame.K_s] and player.y + player_vel + player.get_height() < HEIGHT : # Go down
+        if keys[pygame.K_s] and player.y + player_vel + player.get_height() + 20 < HEIGHT : # Go down
             player.y += player_vel
         if keys[pygame.K_SPACE]: # shoot laser
             player.shoot()
@@ -230,10 +243,22 @@ def main():
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
 
-            if enemy.y + enemy.get_height() > HEIGHT: # Enemies go outside the window
+            if random.randrange(0, 2*FPS) == 1: # Probability of enemy shoot
+                enemy.shoot()
+
+            if collide(enemy, player):
+                player.health -= 10
+                enemies.remove(enemy)
+
+            elif enemy.y + enemy.get_height() > HEIGHT: # Enemies go outside the window | Control flow
                 lives -= 1
                 enemies.remove(enemy) # Destroy object
 
-        player.move_lasers(-laser_vel, enemies)
+
+
+
+        player.move_lasers(-laser_vel, enemies) # Minus Y-axis : Bullet go up
+
+
 
 main()
